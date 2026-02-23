@@ -108,7 +108,7 @@ created: {today_str}
 ---
 # 💡 Trend Forge Report: {today_str}
 
-このレポートはGitHub Trending (`{github_lang}`), Hacker News, そして Reddit (`{', '.join(reddit_subs)}`) の最新情報を**Gemini 2.0 Flash**が分析し、個人開発のインスピレーション源として自動生成したものです。
+このレポートはGitHub Trending (`{github_lang}`), Hacker News, そして Reddit (`{', '.join(all_reddit_subs)}`) の最新情報を**Gemini 2.0 Flash**が分析し、個人開発のインスピレーション源として自動生成したものです。
 
 {markdown_report}
     """
