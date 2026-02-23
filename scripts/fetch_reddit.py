@@ -8,9 +8,9 @@ def fetch_reddit_top_posts(subreddit, limit=10, timeframe="day"):
     url = f"https://www.reddit.com/r/{subreddit}/top.json?limit={limit}&t={timeframe}"
     print(f"Fetching Reddit top posts from r/{subreddit}...")
     
-    # Reddit API requires a custom User-Agent to avoid 429 Too Many Requests
+    # Reddit API requires a custom User-Agent to avoid 429/403 errors
     headers = {
-        "User-Agent": "TrendForge/1.0 (by abscly)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     try:
