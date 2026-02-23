@@ -1,0 +1,28 @@
+# pyenv
+.python-version
+
+# environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macos
+.DS_Store
+
+# build
+build/
+dist/
+*.egg-info/
