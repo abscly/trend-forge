@@ -6,6 +6,7 @@ from fetch_reddit import fetch_reddit_top_posts
 from analyzer import generate_trend_ideas
 from fetch_hackernews import fetch_hacker_news_top
 from config import DISCORD_WEBHOOK_URL
+from github_vault import upload_to_vault
 
 def get_obsidian_trend_forge_path():
     """
@@ -113,10 +114,19 @@ created: {today_str}
 {markdown_report}
     """
     
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(final_content)
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(final_content)
+        print(f"✅ Successfully saved report locally to: {output_file}")
+    except FileNotFoundError:
+        print(f"⚠️ Local Obsidian folder not found (this is normal on GCE). Skipping local save.")
+    except Exception as e:
+        print(f"⚠️ Failed to save locally: {e}")
         
-    print(f"✅ Successfully saved report to: {output_file}")
+    # GitHub Vault (リモートリポジトリ) への保存
+    filename = f"TrendForge_{today_str}.md"
+    print(f"\n[Step 3.5] Uploading to GitHub Vault ({filename})...")
+    upload_to_vault(filename, final_content)
     
     # 4. Discordへの通知
     print("\n[Step 4] Checking Discord Webhook...")
