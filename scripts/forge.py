@@ -23,6 +23,7 @@ def get_obsidian_trend_forge_path():
 def post_to_discord(content):
     """
     生成されたMarkdownレポートをDiscordへ送信する
+    文字数制限（Descriptionは4096文字、全体で6000文字）を考慮して長ければ分割する
     """
     if not DISCORD_WEBHOOK_URL:
         print("⚠️ DISCORD_WEBHOOK_URL is not set. Skipping Discord notification.")
@@ -30,25 +31,29 @@ def post_to_discord(content):
 
     print("Sending report to Discord...")
     
-    # Discordのメッセージ長制限（2000文字）に対応するため分割して送信
-    # またはファイルとして添付する
-    payload = {
-        "content": "🚀 **今日のAIトレンド・リサーチレポートが届きました！**",
-        "embeds": [
-            {
-                "title": f"💡 Trend Forge Report: {datetime.datetime.now().strftime('%Y-%m-%d')}",
-                "description": content[:4000] + ("...\n(Truncated)" if len(content) > 4000 else ""),
-                "color": 3447003
-            }
-        ]
-    }
+    # チャンクサイズ（安全を見て3500文字程度）
+    CHUNK_SIZE = 3500
+    chunks = [content[i:i + CHUNK_SIZE] for i in range(0, len(content), CHUNK_SIZE)]
     
-    try:
-        response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
-        response.raise_for_status()
-        print("✅ Successfully sent to Discord.")
-    except Exception as e:
-        print(f"❌ Failed to send to Discord: {e}")
+    for idx, chunk in enumerate(chunks):
+        title_suffix = f" (Part {idx+1}/{len(chunks)})" if len(chunks) > 1 else ""
+        payload = {
+            "content": "🚀 **今日のAIトレンド・リサーチレポートが届きました！**" if idx == 0 else "",
+            "embeds": [
+                {
+                    "title": f"💡 Trend Forge Report: {datetime.datetime.now().strftime('%Y-%m-%d')}{title_suffix}",
+                    "description": chunk,
+                    "color": 3447003
+                }
+            ]
+        }
+        
+        try:
+            response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
+            response.raise_for_status()
+            print(f"✅ Successfully sent chunk {idx+1}/{len(chunks)} to Discord.")
+        except Exception as e:
+            print(f"❌ Failed to send chunk {idx+1}/{len(chunks)} to Discord: {e}")
 
 def main():
     print("="*40)
@@ -57,8 +62,13 @@ def main():
     
     # 1. データスクレイピング & API収集
     github_lang = "python" # 例: python界隈のトレンド
-    # 新たに「AppIdeas(アプリ案)」や「SomebodyMakeThis(誰か作って)」を追加してペイン重視の構成に
-    reddit_subs = ["SideProject", "AppIdeas", "SomebodyMakeThis", "macapps", "chrome_extensions"]
+    
+    # テック系・開発者向けのサブレディット
+    tech_subs = ["SideProject", "chrome_extensions", "macapps", "AppIdeas"]
+    # 一般・非エンジニア向けのペイン発掘用サブレディット
+    general_subs = ["SomebodyMakeThis", "LifeProTips", "productivity", "internetisbeautiful"]
+    
+    all_reddit_subs = tech_subs + general_subs
     
     print("\n[Step 1] Fetching raw data...")
     github_data = fetch_github_trending(language=github_lang, timeframe="daily")
@@ -67,7 +77,7 @@ def main():
     hn_data = fetch_hacker_news_top(limit=10)
     
     reddit_data = []
-    for sub in reddit_subs:
+    for sub in all_reddit_subs:
         data = fetch_reddit_top_posts(sub, limit=5)
         reddit_data.extend(data)
         
